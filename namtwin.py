@@ -28,7 +28,13 @@ class Amp:
     def _run(self, renders, params=None):
         job = self.path("job-%d.json" % os.getpid())
         json.dump({"base": self.cfg.get("base", "B"), "params": params or {}, "renders": renders}, open(job, "w"))
-        subprocess.run([self.cfg["renderer"], job], check=True)
+        if not hasattr(self, "server"):  # kept alive: the renderer's start-up costs far more than a render
+            self.server = subprocess.Popen([self.cfg["renderer"], "--serve"], stdin=subprocess.PIPE,
+                                           stdout=subprocess.PIPE, text=True)
+        self.server.stdin.write(job + "\n")
+        self.server.stdin.flush()
+        if self.server.stdout.readline().strip() != "0":
+            raise RuntimeError("renderer failed on " + job)
 
     def teacher(self, x, captures=None):
         """The captures' outputs for signal x: array [capture, sample]."""
@@ -91,23 +97,41 @@ class Space:
 LIN_DB = -60.0  # the captures are level-independent (linear) here: measured, -60 and -50 dBFS agree
 
 
-def fit_linear(amp, fixed=None, captures=None, verbose=True, names=None, truth=None):
+def fit_linear(amp, fixed=None, captures=None, verbose=True, names=None, truth=None, lam=0.0, target=None):
     """Stage 1: match each capture's small-signal third-octave response. Returns (params, report).
-    With `truth` (a parameter set) the target is the circuit itself instead of the captures: the self-test."""
+    With `truth` (a parameter set) the target is the circuit itself instead of the captures: the self-test.
+    `lam` weights a prior that pulls each parameter toward its nominal value (in units of a quarter of its
+    range); lam = 0 is the unpenalised fit. `target` lets the caller pass a precomputed teacher response."""
     from scipy.optimize import least_squares
     captures = amp.captures if captures is None else captures
     x = sweep(1.5) * 10 ** (LIN_DB / 20)
-    target = band_db(x, amp.teacher(x, captures) if truth is None else amp.circuit(x, truth, captures))
+    if target is None:
+        target = band_db(x, amp.teacher(x, captures) if truth is None else amp.circuit(x, truth, captures))
     space = Space(amp.cfg["params"], "linear", names)
+    sd = np.maximum((space.hi - space.lo) / 4, 1e-9)
 
-    def residual(u):
+    def data(u):
         return (band_db(x, amp.circuit(x, {**(fixed or {}), **space.params(u)}, captures)) - target).ravel()
 
-    r0 = residual(space.x0)
-    fit = least_squares(residual, space.x0, bounds=(space.lo, space.hi), loss="soft_l1", f_scale=2.0,
-                        diff_step=0.02, x_scale=np.maximum(0.1, np.abs(space.hi - space.lo) / 4),
-                        verbose=2 if verbose else 0, max_nfev=40)
-    r1 = residual(fit.x)
+    def residual(u):
+        return np.concatenate([data(u), lam * (u - space.x0) / sd])
+
+    def jac(u):
+        # Forward differences with an absolute step. scipy's own step is relative to the value, and for a
+        # parameter sitting at 0 (a linear taper) it shrinks to 1e-8, where the model does not respond.
+        r, h = residual(u), 1e-3
+        cols = []
+        for i in range(len(u)):
+            v = u.copy()
+            v[i] += h if u[i] + h <= space.hi[i] else -h
+            cols.append((residual(v) - r) / (v[i] - u[i]))
+        return np.stack(cols, 1)
+
+    r0 = data(space.x0)
+    fit = least_squares(residual, space.x0, jac=jac, bounds=(space.lo, space.hi), loss="soft_l1", f_scale=2.0,
+                        x_scale=np.maximum(0.1, np.abs(space.hi - space.lo) / 4),
+                        xtol=1e-10, ftol=1e-10, verbose=2 if verbose else 0, max_nfev=80)
+    r1 = data(fit.x)
     # How well the captures pin each parameter down: its standard error, from the Jacobian at the optimum.
     jtj = fit.jac.T @ fit.jac
     sigma2 = (r1 ** 2).sum() / max(1, len(r1) - len(fit.x))
@@ -122,6 +146,40 @@ def rms_rows(r, n):
     return np.sqrt((r.reshape(n, -1) ** 2).mean(1)).tolist()
 
 
+def heldout(amp, lams, folds=5, verbose=True):
+    """Leave-k-out: fit on all captures but a fold, predict the fold, for each prior weight.
+    Every finished fold is saved to work/<amp>/heldout.json, and a rerun skips it: an interrupted run resumes.
+    Returns {lam: mean held-out rms dB}."""
+    caps = amp.captures
+    x = sweep(1.5) * 10 ** (LIN_DB / 20)
+    teacher = band_db(x, amp.teacher(x))  # [capture, band]
+    path = amp.path("heldout.json")
+    done = json.load(open(path)) if os.path.exists(path) else {}
+    out = {}
+    for lam in lams:
+        key = "%g" % lam
+        per = done.setdefault(key, {"folds": {}, "per_capture": [None] * len(caps)})
+        for k in range(folds):
+            if str(k) in per["folds"]:
+                continue
+            test = [i for i in range(len(caps)) if i % folds == k]
+            train = [i for i in range(len(caps)) if i % folds != k]
+            params, _ = fit_linear(amp, captures=[caps[i] for i in train], verbose=False, lam=lam,
+                                   target=teacher[train])
+            pred = band_db(x, amp.circuit(x, params, [caps[i] for i in test]))
+            for i, e in zip(test, np.sqrt(((pred - teacher[test]) ** 2).mean(1))):
+                per["per_capture"][i] = float(e)
+            per["folds"][str(k)] = params
+            json.dump(done, open(path + ".tmp", "w"), indent=1)
+            os.replace(path + ".tmp", path)
+            if verbose:
+                print("lam %-6g fold %d/%d done" % (lam, k + 1, folds), flush=True)
+        out[lam] = float(np.mean(per["per_capture"]))
+        if verbose:
+            print("lam %-6g held-out mean rms %.2f dB" % (lam, out[lam]), flush=True)
+    return out
+
+
 if __name__ == "__main__":
     amp = Amp(sys.argv[1])
     if sys.argv[2] == "selftest":
@@ -129,13 +187,24 @@ if __name__ == "__main__":
         spec = amp.cfg["params"]
         names = list(spec)[:6]
         truth = {n: spec[n]["nominal"] * 1.25 if spec[n]["log"] else spec[n]["nominal"] + 0.6 for n in names}
-        got, _ = fit_linear(amp, names=names, truth=truth, verbose=False)
+        got, rep = fit_linear(amp, names=names, truth=truth, verbose=False)
+        u = lambda n, v: np.log(v) if spec[n]["log"] else v
         for n in names:
-            print("%-14s truth %10.4g  found %10.4g" % (n, truth[n], got[n]))
-            assert abs(got[n] - truth[n]) < 0.03 * abs(truth[n]) + 0.03, n + " not recovered"
+            # A parameter the captures barely constrain may sit anywhere along its flat direction: it is
+            # held to 3 standard errors, the well-determined ones to 3%.
+            tol = max(0.03, 3 * rep["stderr"][n])
+            print("%-14s truth %10.4g  found %10.4g  (allowed %.2f)" % (n, truth[n], got[n], tol))
+            assert abs(u(n, got[n]) - u(n, truth[n])) < tol, n + " not recovered"
+        worst = max(rep["rms_db_after"])
+        print("worst capture: %.3f dB" % worst)
+        assert worst < 0.15, "the fit does not reproduce its own fake captures"
         print("selftest ok")
+    elif sys.argv[2] == "heldout":
+        lams = [float(v) for v in sys.argv[3].split(",")]
+        heldout(amp, lams)
     elif sys.argv[2] == "linear":
-        params, rep = fit_linear(amp)
+        lam = float(sys.argv[3]) if len(sys.argv) > 3 else 0.0
+        params, rep = fit_linear(amp, lam=lam)
         json.dump(params, open(amp.path("params.json"), "w"), indent=1)
         json.dump(rep, open(amp.path("linear-report.json"), "w"), indent=1)
         spec = amp.cfg["params"]

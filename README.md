@@ -50,7 +50,8 @@ nam-twin knows nothing about any amplifier. An amp is:
 - `amps/<name>.json`: the parameters to fit, each with nominal value, bounds and scale;
 - `amps/<name>.local.json` (untracked): paths to the renderer, the captures list and the `.nam` files;
 - a captures list: `{"captures": [{"file", "channel", "knobs": {...}}, ...]}`;
-- a **renderer**: an executable taking a job file,
+- a **renderer**: an executable that, run with `--serve`, reads job file paths from stdin (one per line)
+  and answers each with its exit code on stdout. A job is
 
       { "base": ..., "params": { name: value, ... },
         "renders": [ { "in": path, "out": path, "nam": path }
