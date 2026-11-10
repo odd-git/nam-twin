@@ -1,0 +1,180 @@
+{
+ "base": "B",
+ "params": {
+  "outputScale": {
+   "nominal": 0.0013,
+   "lo": 0.0001,
+   "hi": 1.0,
+   "log": true,
+   "stage": "linear"
+  },
+  "taperVol1": {
+   "nominal": 2,
+   "lo": 0.2,
+   "hi": 4,
+   "log": false,
+   "stage": "linear"
+  },
+  "taperVol2": {
+   "nominal": 2,
+   "lo": 0.2,
+   "hi": 4,
+   "log": false,
+   "stage": "linear"
+  },
+  "taperBass": {
+   "nominal": 2,
+   "lo": 0.2,
+   "hi": 4,
+   "log": false,
+   "stage": "linear"
+  },
+  "taperTreble": {
+   "nominal": 0,
+   "lo": -2,
+   "hi": 2,
+   "log": false,
+   "stage": "linear"
+  },
+  "taperMid": {
+   "nominal": 0,
+   "lo": -2,
+   "hi": 2,
+   "log": false,
+   "stage": "linear"
+  },
+  "taperPresence": {
+   "nominal": 0,
+   "lo": -2,
+   "hi": 2,
+   "log": false,
+   "stage": "linear"
+  },
+  "potTreble": {
+   "nominal": 250000.0,
+   "lo": 175000.0,
+   "hi": 325000.0,
+   "log": true,
+   "stage": "linear"
+  },
+  "potBass": {
+   "nominal": 1000000.0,
+   "lo": 700000.0,
+   "hi": 1300000.0,
+   "log": true,
+   "stage": "linear"
+  },
+  "potMid": {
+   "nominal": 25000.0,
+   "lo": 17500.0,
+   "hi": 32500.0,
+   "log": true,
+   "stage": "linear"
+  },
+  "potPresence": {
+   "nominal": 5000.0,
+   "lo": 3500.0,
+   "hi": 6500.0,
+   "log": true,
+   "stage": "linear"
+  },
+  "cCouple1": {
+   "nominal": 2.2e-09,
+   "lo": 1.5399999999999999e-09,
+   "hi": 2.86e-09,
+   "log": true,
+   "stage": "linear"
+  },
+  "cMixBright": {
+   "nominal": 5e-10,
+   "lo": 3.5e-10,
+   "hi": 6.5e-10,
+   "log": true,
+   "stage": "linear"
+  },
+  "rMix": {
+   "nominal": 470000.0,
+   "lo": 329000.0,
+   "hi": 611000.0,
+   "log": true,
+   "stage": "linear"
+  },
+  "cTreble": {
+   "nominal": 5e-10,
+   "lo": 3.5e-10,
+   "hi": 6.5e-10,
+   "log": true,
+   "stage": "linear"
+  },
+  "cBass": {
+   "nominal": 2.2e-08,
+   "lo": 1.54e-08,
+   "hi": 2.8599999999999998e-08,
+   "log": true,
+   "stage": "linear"
+  },
+  "cMid": {
+   "nominal": 2.2e-08,
+   "lo": 1.54e-08,
+   "hi": 2.8599999999999998e-08,
+   "log": true,
+   "stage": "linear"
+  },
+  "cToneOut": {
+   "nominal": 2.2e-08,
+   "lo": 1.54e-08,
+   "hi": 2.8599999999999998e-08,
+   "log": true,
+   "stage": "linear"
+  },
+  "rSlope": {
+   "nominal": 33000.0,
+   "lo": 23100.0,
+   "hi": 42900.0,
+   "log": true,
+   "stage": "linear"
+  },
+  "cPresence": {
+   "nominal": 6.8e-07,
+   "lo": 4.759999999999999e-07,
+   "hi": 8.839999999999999e-07,
+   "log": true,
+   "stage": "linear"
+  },
+  "ck1Bright": {
+   "nominal": 6.8e-07,
+   "lo": 4.759999999999999e-07,
+   "hi": 8.839999999999999e-07,
+   "log": true,
+   "stage": "linear"
+  },
+  "feedbackR": {
+   "nominal": 47000.0,
+   "lo": 20000.0,
+   "hi": 120000.0,
+   "log": true,
+   "stage": "linear"
+  },
+  "driverHpHz": {
+   "nominal": 12.5,
+   "lo": 5,
+   "hi": 40,
+   "log": true,
+   "stage": "linear"
+  },
+  "otLowHz": {
+   "nominal": 6,
+   "lo": 2,
+   "hi": 40,
+   "log": true,
+   "stage": "linear"
+  },
+  "otHighHz": {
+   "nominal": 9000,
+   "lo": 3000,
+   "hi": 20000,
+   "log": true,
+   "stage": "linear"
+  }
+ }
+}
