@@ -1,5 +1,5 @@
 {
- "base": "B",
+ "base": "C",
  "params": {
   "outputScale": {
    "nominal": 0.0013,
@@ -50,34 +50,6 @@
    "log": false,
    "stage": "linear"
   },
-  "potTreble": {
-   "nominal": 250000.0,
-   "lo": 175000.0,
-   "hi": 325000.0,
-   "log": true,
-   "stage": "linear"
-  },
-  "potBass": {
-   "nominal": 1000000.0,
-   "lo": 700000.0,
-   "hi": 1300000.0,
-   "log": true,
-   "stage": "linear"
-  },
-  "potMid": {
-   "nominal": 25000.0,
-   "lo": 17500.0,
-   "hi": 32500.0,
-   "log": true,
-   "stage": "linear"
-  },
-  "potPresence": {
-   "nominal": 5000.0,
-   "lo": 3500.0,
-   "hi": 6500.0,
-   "log": true,
-   "stage": "linear"
-  },
   "cCouple1": {
    "nominal": 2.2e-09,
    "lo": 1.5399999999999999e-09,
@@ -120,13 +92,6 @@
    "log": true,
    "stage": "linear"
   },
-  "cToneOut": {
-   "nominal": 2.2e-08,
-   "lo": 1.54e-08,
-   "hi": 2.8599999999999998e-08,
-   "log": true,
-   "stage": "linear"
-  },
   "rSlope": {
    "nominal": 33000.0,
    "lo": 23100.0,
@@ -149,23 +114,9 @@
    "stage": "linear"
   },
   "feedbackR": {
-   "nominal": 47000.0,
+   "nominal": 100000.0,
    "lo": 20000.0,
    "hi": 120000.0,
-   "log": true,
-   "stage": "linear"
-  },
-  "driverHpHz": {
-   "nominal": 12.5,
-   "lo": 5,
-   "hi": 40,
-   "log": true,
-   "stage": "linear"
-  },
-  "otLowHz": {
-   "nominal": 6,
-   "lo": 2,
-   "hi": 40,
    "log": true,
    "stage": "linear"
   },
@@ -175,6 +126,44 @@
    "hi": 20000,
    "log": true,
    "stage": "linear"
+  },
+  "loadHz": {
+   "nominal": 100,
+   "lo": 50,
+   "hi": 200,
+   "log": true,
+   "stage": "linear"
+  },
+  "loadQ": {
+   "nominal": 3,
+   "lo": 0.7,
+   "hi": 10,
+   "log": true,
+   "stage": "linear"
+  },
+  "loadPeak": {
+   "nominal": 4,
+   "lo": 1,
+   "hi": 15,
+   "log": true,
+   "stage": "linear"
+  },
+  "loadLeR": {
+   "nominal": 3,
+   "lo": 0.5,
+   "hi": 10,
+   "log": true,
+   "stage": "linear"
+  },
+  "loadLeHz": {
+   "nominal": 1500,
+   "lo": 300,
+   "hi": 6000,
+   "log": true,
+   "stage": "linear"
   }
+ },
+ "fixed": {
+  "loadOn": 1
  }
 }

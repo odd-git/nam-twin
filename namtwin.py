@@ -42,7 +42,8 @@ class Amp:
 
     def circuit(self, x, params, captures=None):
         """The circuit model's outputs for signal x at each capture's settings."""
-        return self._render(x, captures, lambda c: {"knobs": c["knobs"], "channel": c["channel"]}, params)
+        return self._render(x, captures, lambda c: {"knobs": c["knobs"], "channel": c["channel"]},
+                            {**self.cfg.get("fixed", {}), **params})
 
     def _render(self, x, captures, spec, params):
         captures = self.captures if captures is None else captures
