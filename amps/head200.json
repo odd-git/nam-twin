@@ -116,14 +116,14 @@
   "feedbackR": {
    "nominal": 100000.0,
    "lo": 20000.0,
-   "hi": 120000.0,
+   "hi": 330000.0,
    "log": true,
    "stage": "linear"
   },
   "otHighHz": {
    "nominal": 9000,
    "lo": 3000,
-   "hi": 20000,
+   "hi": 40000,
    "log": true,
    "stage": "linear"
   },
